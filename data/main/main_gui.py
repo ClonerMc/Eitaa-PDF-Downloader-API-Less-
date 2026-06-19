@@ -1,12 +1,12 @@
 # data/main/main_gui.py
-import sys, os, subprocess
+import sys, os, subprocess, threading, urllib.request, json
 from datetime import datetime
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QPushButton, QTextEdit, QLabel, QMessageBox, QCheckBox,
     QProgressBar, QSpinBox, QTabWidget, QGroupBox, QLineEdit, QFileDialog, QDialog
 )
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QPixmap, QIcon
 from downloader_core import EitaaWorkerThread
 
@@ -45,6 +45,8 @@ QSpinBox {{ background-color: #11111B; border: 1px solid #313244; border-radius:
 """
 
 class ModernEitaaGUI(QWidget):
+    update_signal = pyqtSignal(dict)
+
     def __init__(self):
         super().__init__()
         self.CURRENT_VERSION = "5.0"
@@ -63,9 +65,11 @@ class ModernEitaaGUI(QWidget):
         self.worker.finished_signal.connect(self._on_done)
         self.worker.progress_signal.connect(self._on_progress)
         self.worker.browser_ready_signal.connect(self._on_browser_ready)
+        
+        self.update_signal.connect(self._on_update_result_received)
 
         self._build_ui()
-        QTimer.singleShot(3000, self._auto_check_update)
+        QTimer.singleShot(1500, self._auto_check_update)
 
     def _build_ui(self):
         main_layout = QVBoxLayout(self)
@@ -239,8 +243,7 @@ class ModernEitaaGUI(QWidget):
         self.btn_manual_update.clicked.connect(self._manual_check_update)
         update_layout.addWidget(self.btn_manual_update, 1, 0)
 
-        self.lbl_update_status = QLabel("وضعیت: آخرین نسخه روی سیستم شما نصب است.")
-        self.lbl_update_status.setStyleSheet("color: #A6E3A1; font-weight: bold;")
+        self.lbl_update_status = QLabel("وضعیت: در حال بررسی...")
         update_layout.addWidget(self.lbl_update_status, 1, 1)
 
         layout.addWidget(update_group)
@@ -309,38 +312,57 @@ class ModernEitaaGUI(QWidget):
 
     def _auto_check_update(self):
         if self.chk_auto_update.isChecked():
-            self._execute_update_check(silent=True)
+            threading.Thread(target=self._execute_update_check, args=(True,), daemon=True).start()
+        else:
+            self.lbl_update_status.setText("وضعیت: بررسی خودکار غیرفعال است.")
+            self.lbl_update_status.setStyleSheet("color: #A6ADC8; font-weight: bold;")
 
     def _manual_check_update(self):
         self.btn_manual_update.setEnabled(False)
         self.btn_manual_update.setText("در حال بررسی...")
-        self._execute_update_check(silent=False)
-        self.btn_manual_update.setEnabled(True)
-        self.btn_manual_update.setText("🔄 بررسی و دریافت آخرین نسخه نرم‌افزار")
+        self.lbl_update_status.setText("وضعیت: در حال اتصال به سرور گیت‌هاب...")
+        self.lbl_update_status.setStyleSheet("color: #89DCEB;")
+        threading.Thread(target=self._execute_update_check, args=(False,), daemon=True).start()
 
     def _execute_update_check(self, silent):
-        import urllib.request
-        import json
         url = "https://raw.githubusercontent.com/ClonerMc/Eitaa-PDF-Downloader-API-Less-/main/version.json"
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             with urllib.request.urlopen(req, timeout=5) as response:
                 data = json.loads(response.read().decode())
-                online_version = data.get("version", "5.0")
-                update_msg = data.get("message", "")
-                if online_version != self.CURRENT_VERSION:
-                    self.lbl_update_status.setText(f"نسخه جدید {online_version} یافت شد!")
-                    self.lbl_update_status.setStyleSheet("color: #F9E2AF; font-weight: bold;")
-                    QMessageBox.information(
-                        self, "به‌روزرسانی جدید", 
-                        f"مهندس عزیز، نسخه جدید نرم‌افزار ({online_version}) منتشر شد.\n\nتغییرات:\n{update_msg}\n\nجهت دریافت فایل‌های جدید به کانال گیت‌هاب مراجعه فرمایید."
-                    )
-                else:
-                    if not silent:
-                        QMessageBox.information(self, "بررسی آپدیت", "نرم‌افزار شما کاملاً به‌روز است.")
+                data["silent"] = silent
+                data["success"] = True
+                self.update_signal.emit(data)
         except Exception:
+            self.update_signal.emit({"success": False, "silent": silent})
+
+    def _on_update_result_received(self, data):
+        self.btn_manual_update.setEnabled(True)
+        self.btn_manual_update.setText("🔄 بررسی و دریافت آخرین نسخه نرم‌افزار")
+        
+        if not data.get("success", False):
+            self.lbl_update_status.setText("وضعیت: خطا در اتصال به سرور.")
+            self.lbl_update_status.setStyleSheet("color: #F38BA8; font-weight: bold;")
+            if not data.get("silent", False):
+                QMessageBox.warning(self, "خطای شبکه", "امکان اتصال به سرور گیت‌هاب فراهم نشد.\nلطفاً وضعیت شبکه یا VPN خود را بررسی کنید.")
+            return
+
+        online_version = data.get("version", "5.0")
+        update_msg = data.get("message", "")
+        silent = data.get("silent", False)
+
+        if online_version != self.CURRENT_VERSION:
+            self.lbl_update_status.setText(f"نسخه جدید {online_version} یافت شد!")
+            self.lbl_update_status.setStyleSheet("color: #F9E2AF; font-weight: bold;")
+            QMessageBox.information(
+                self, "به‌روزرسانی جدید", 
+                f"مهندس عزیز، نسخه جدید نرم‌افزار ({online_version}) منتشر شد.\n\nتغییرات:\n{update_msg}\n\nجهت دریافت فایل‌های جدید به کانال گیت‌هاب مراجعه فرمایید."
+            )
+        else:
+            self.lbl_update_status.setText("وضعیت: آخرین نسخه روی سیستم شما نصب است.")
+            self.lbl_update_status.setStyleSheet("color: #A6E3A1; font-weight: bold;")
             if not silent:
-                QMessageBox.warning(self, "خطای شبکه", "امکان اتصال به سرور گیت‌هاب فراهم نشد.\nلطفاً وضعیت شبکه را بررسی کنید.")
+                QMessageBox.information(self, "بررسی آپدیت", "نرم‌افزار شما کاملاً به‌روز است.")
 
     def _browse_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "انتخاب پوشه ذخیره‌سازی")
