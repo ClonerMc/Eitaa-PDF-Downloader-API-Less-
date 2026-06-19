@@ -1,8 +1,6 @@
 # data/main/launcher.pyw
-import sys, os, ctypes
-import traceback
+import sys, os, ctypes, traceback
 
-# تنظیم دقیق مسیرها برای جلوگیری از گم شدن فایل‌ها
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CORE_DIR = os.path.join(BASE_DIR, "data", "core")
 MAIN_DIR = os.path.join(BASE_DIR, "data", "main")
@@ -11,16 +9,15 @@ IMG_DIR  = os.path.join(BASE_DIR, "data", "img")
 if CORE_DIR not in sys.path: sys.path.append(CORE_DIR)
 if MAIN_DIR not in sys.path: sys.path.append(MAIN_DIR)
 
-# تغییر مسیر اجرای فعلی به پوشه اصلی برنامه
 os.chdir(BASE_DIR)
 
 try:
     from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit, QLabel, QCheckBox, QSplashScreen
-    from PyQt6.QtCore import Qt, QTimer
+    from PyQt6.QtCore import Qt, QTimer, QCoreApplication
     from PyQt6.QtGui import QPixmap, QIcon, QPainter, QColor
 except ImportError as e:
-    msg = f"خطا در اجرای گرافیک!\n\nکتابخانه‌های گرافیکی پایتون روی سیستم شما یافت نشدند.\n\nلطفاً محیط خط فرمان (CMD) را باز کرده و دستور زیر را اجرا کنید:\npip install PyQt6 playwright pandas openpyxl"
-    ctypes.windll.user32.MessageBoxW(0, msg, "نیاز به نصب دستی", 0x10 | 0x0)
+    msg = f"کتابخانه‌های گرافیکی نصب نیستند.\nلطفا در CMD اجرا کنید:\npip install PyQt6 playwright pandas openpyxl"
+    ctypes.windll.user32.MessageBoxW(0, msg, "Dependency Error", 0x10 | 0x0)
     sys.exit(1)
 
 DARK_QSS = """
@@ -42,7 +39,6 @@ class WelcomeDialog(QDialog):
             self.setWindowIcon(QIcon(ico_path))
             
         layout = QVBoxLayout(self)
-        
         title = QLabel("قوانین، سیاست‌ها و شرایط استفاده از نرم‌افزار")
         title.setStyleSheet("font-size: 16pt; font-weight: bold; color: #89B4FA; margin-bottom: 5px;")
         layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -87,7 +83,6 @@ class WelcomeDialog(QDialog):
         btn_decline.clicked.connect(self.reject)
         
         chk_agree.toggled.connect(self.btn_accept.setEnabled)
-        
         btn_layout.addWidget(self.btn_accept)
         btn_layout.addWidget(btn_decline)
         layout.addLayout(btn_layout)
@@ -95,11 +90,10 @@ class WelcomeDialog(QDialog):
 class DynamicSplashScreen(QSplashScreen):
     def __init__(self, pixmap, text_y_offset):
         super().__init__(pixmap, Qt.WindowType.WindowStaysOnTopHint)
-        
         ico_path = os.path.join(IMG_DIR, "Ico.png")
         if os.path.exists(ico_path):
             self.setWindowIcon(QIcon(ico_path))
-            
+        
         self.loading_texts = [
             "در حال بارگذاری هسته گرافیکی (PyQt6)...",
             "پیکربندی محیط ایزوله مرورگر (Playwright)...",
@@ -110,7 +104,6 @@ class DynamicSplashScreen(QSplashScreen):
             "در حال راه‌اندازی نهایی نرم‌افزار..."
         ]
         self.step = 0
-        
         self.text_label = QLabel(self)
         self.text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.text_label.setGeometry(15, text_y_offset, pixmap.width() - 30, 80)
@@ -126,21 +119,20 @@ class DynamicSplashScreen(QSplashScreen):
             html = f"<div style='background-color: rgba(22, 22, 34, 0.95); color: #A6E3A1; padding: 10px; border-radius: 8px; border: 1px solid #313244; font-family: Tahoma; font-size: 10pt; font-weight: bold; text-align: center;'>{current_text}<br><span style='color:#CDD6F4; font-size: 9pt;'>لطفاً منتظر بمانید</span></div>"
             self.text_label.setText(html)
             self.step += 1
+            QCoreApplication.processEvents()
 
-# تابع اجرای برنامه اصلی در همان پردازش جاری
-def start_main_application():
+def launch_main_gui(splash):
     try:
         import main_gui
         global main_window
+        # نام کلاس دقیقا با فایل main_gui سینک شد
         main_window = main_gui.ModernEitaaGUI()
         splash.finish(main_window)
         main_window.show()
     except Exception as e:
-        # در صورت بروز هرگونه مشکل، اطلاعات دقیق خطا ثبت می‌شود
         with open("error_debug.txt", "w", encoding="utf-8") as f:
-            f.write("=== گزارش خطای سیستم اصلی ===\n")
-            f.write("خطا در بارگذاری برنامه اصلی (main_gui.py):\n")
             f.write(traceback.format_exc())
+        ctypes.windll.user32.MessageBoxW(0, f"Error Loading GUI:\n{str(e)}", "Fatal Error", 0x10 | 0x0)
         sys.exit(1)
 
 if __name__ == "__main__":
@@ -168,7 +160,7 @@ if __name__ == "__main__":
     combined_h = 20 + h1 + spacing + h2 + spacing + text_area_h + 10
     
     combined_pixmap = QPixmap(combined_w, combined_h)
-    combined_pixmap.fill(QColor(0x1E, 0x1E, 0x2E))
+    combined_pixmap.fill(QColor("#1E1E2E"))
     
     painter = QPainter(combined_pixmap)
     current_y = 20
@@ -184,7 +176,5 @@ if __name__ == "__main__":
     splash.show()
     app.processEvents()
     
-    # اجرای تابع برنامه اصلی پس از پایان انیمیشن لودینگ (5.5 ثانیه)
-    QTimer.singleShot(5500, start_main_application)
-    
+    QTimer.singleShot(6000, lambda: launch_main_gui(splash))
     sys.exit(app.exec())

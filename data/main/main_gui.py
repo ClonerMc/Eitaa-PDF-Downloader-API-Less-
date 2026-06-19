@@ -107,11 +107,11 @@ class ModernEitaaGUI(QWidget):
         header_layout.addLayout(logo_box)
         main_layout.addLayout(header_layout)
 
-        tabs = QTabWidget()
-        tabs.addTab(self._create_dashboard_tab(), "داشبورد عملیات")
-        tabs.addTab(self._create_bot_settings_tab(), "تنظیمات پیشرفته")
-        tabs.addTab(self._create_excel_settings_tab(), "مدیریت فایل و خروجی")
-        main_layout.addWidget(tabs)
+        self.tabs = QTabWidget()
+        self.tabs.addTab(self._create_dashboard_tab(), "داشبورد عملیات")
+        self.tabs.addTab(self._create_bot_settings_tab(), "تنظیمات پیشرفته")
+        self.tabs.addTab(self._create_excel_settings_tab(), "مدیریت فایل و خروجی")
+        main_layout.addWidget(self.tabs)
 
         self.btn_exit = QPushButton("❌ خروج امن و آزادسازی منابع سیستم")
         self.btn_exit.setStyleSheet("background:#F38BA8; color:#11111B; font-weight:bold; font-size: 12pt; padding: 12px; border-radius: 8px; margin-top: 5px;")
@@ -125,8 +125,15 @@ class ModernEitaaGUI(QWidget):
     def _create_dashboard_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
+
         top_ctrl_layout = QHBoxLayout()
         top_ctrl_layout.addWidget(QLabel("مراحل اجرا:", styleSheet="font-size: 13pt; font-weight: bold; color: #89B4FA;"))
+        
+        self.lbl_dashboard_update_notice = QLabel("")
+        self.lbl_dashboard_update_notice.setStyleSheet("font-size: 12pt; font-weight: bold; color: #11111B; background: #F38BA8; padding: 5px 15px; border-radius: 6px;")
+        self.lbl_dashboard_update_notice.setVisible(False)
+        top_ctrl_layout.addWidget(self.lbl_dashboard_update_notice)
+
         top_ctrl_layout.addStretch()
         
         btn_help = QPushButton("❔ راهنمای نرم‌افزار")
@@ -135,6 +142,7 @@ class ModernEitaaGUI(QWidget):
         top_ctrl_layout.addWidget(btn_help)
         
         layout.addLayout(top_ctrl_layout)
+
         ctrl_group = QGroupBox()
         ctrl_layout = QHBoxLayout(ctrl_group)
 
@@ -189,9 +197,10 @@ class ModernEitaaGUI(QWidget):
     def _create_bot_settings_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
+
         group = QGroupBox("تنظیمات مرورگر و دانلود")
         grid = QGridLayout(group)
-        grid.setSpacing(15)
+        grid.setSpacing(20)
 
         self.chk_headless = QCheckBox("اجرای مرورگر در پس‌زمینه (حالت مخفی)")
         self.chk_headless.toggled.connect(lambda v: setattr(self.worker, 'headless_mode', v))
@@ -235,7 +244,7 @@ class ModernEitaaGUI(QWidget):
         self.chk_auto_update.setChecked(True)
         update_layout.addWidget(self.chk_auto_update, 0, 0, 1, 2)
 
-        self.btn_manual_update = QPushButton("🔄 بررسی و دریافت آخرین نسخه نرم‌افزار")
+        self.btn_manual_update = QPushButton("🔄 بررسی نسخه‌های جدید نرم‌افزار")
         self.btn_manual_update.setProperty("class", "BtnPrimary")
         self.btn_manual_update.clicked.connect(self._manual_check_update)
         update_layout.addWidget(self.btn_manual_update, 1, 0)
@@ -250,6 +259,7 @@ class ModernEitaaGUI(QWidget):
     def _create_excel_settings_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
+
         path_group = QGroupBox("تنظیمات مسیر و فیلتر فایل")
         path_layout = QGridLayout(path_group)
         
@@ -335,7 +345,7 @@ class ModernEitaaGUI(QWidget):
 
     def _on_update_result_received(self, data):
         self.btn_manual_update.setEnabled(True)
-        self.btn_manual_update.setText("🔄 بررسی و دریافت آخرین نسخه نرم‌افزار")
+        self.btn_manual_update.setText("🔄 بررسی نسخه‌های جدید نرم‌افزار")
         
         if not data.get("success", False):
             self.lbl_update_status.setText("وضعیت: خطا در اتصال به سرور.")
@@ -351,13 +361,19 @@ class ModernEitaaGUI(QWidget):
         if online_version != self.CURRENT_VERSION:
             self.lbl_update_status.setText(f"نسخه جدید {online_version} یافت شد!")
             self.lbl_update_status.setStyleSheet("color: #F9E2AF; font-weight: bold;")
-            QMessageBox.information(
-                self, "به‌روزرسانی جدید", 
-                f"مهندس عزیز، نسخه جدید نرم‌افزار ({online_version}) منتشر شد.\n\nتغییرات:\n{update_msg}\n\nجهت دریافت فایل‌های جدید به کانال گیت‌هاب مراجعه فرمایید."
-            )
+            
+            self.lbl_dashboard_update_notice.setText(f"⚠️ آپدیت {online_version} در دسترس است! از تب تنظیمات بررسی کنید.")
+            self.lbl_dashboard_update_notice.setVisible(True)
+            
+            if not silent:
+                QMessageBox.information(
+                    self, "به‌روزرسانی جدید", 
+                    f"مهندس عزیز، نسخه جدید نرم‌افزار ({online_version}) منتشر شد.\n\nتغییرات:\n{update_msg}\n\nجهت دریافت فایل‌های جدید به کانال گیت‌هاب مراجعه فرمایید."
+                )
         else:
             self.lbl_update_status.setText("وضعیت: آخرین نسخه روی سیستم شما نصب است.")
             self.lbl_update_status.setStyleSheet("color: #A6E3A1; font-weight: bold;")
+            self.lbl_dashboard_update_notice.setVisible(False)
             if not silent:
                 QMessageBox.information(self, "بررسی آپدیت", "نرم‌افزار شما کاملاً به‌روز است.")
 
@@ -442,7 +458,7 @@ class ModernEitaaGUI(QWidget):
                 <li>وارد حساب ایتا شوید و به کانال مورد نظر بروید.</li>
                 <li>روی دکمه <b>«۲. شروع استخراج»</b> کلیک کنید تا عملیات آغاز شود.</li>
             </ol>
-            <p style='color: #F38BA8; font-size: 14pt;'><b>عیب‌یابی:</b> در صورت بروز ارور, روی دکمه <i>«ذخیره لاگ برای توسعه‌دهنده»</i> کلیک کرده و فایل متنی را در ایتا، روبیکا یا تلگرام به شماره <b>09367056156</b> ارسال نمایید.</p>
+            <p style='color: #F38BA8; font-size: 14pt;'><b>عیب‌یابی:</b> در صورت بروز ارور، روی دکمه <i>«ذخیره لاگ برای توسعه‌دهنده»</i> کلیک کرده و فایل متنی را در ایتا، روبیکا یا تلگرام به شماره <b>09367056156</b> ارسال نمایید.</p>
             
             <hr style='border: 1px solid #313244; margin: 15px 0;'>
             
@@ -484,7 +500,7 @@ class ModernEitaaGUI(QWidget):
         self.log_box.append(f"<span style='color:{color};'>{str_msg}</span>")
         
         if kind == "error" and "عملیات" not in str_msg:
-            self.log_box.append("<span style='color:#F9E2AF; font-size: 10pt;'>💡 راهنما: در صورت قطعی یا خطا، روی «ذخیره لاگ برای توسعه‌دهنده» کلیک کرده و فایل را به <b>09367056156</b> ارسال کنید.</span>")
+            self.log_box.append("<span style='color:#F9E2AF; font-size: 10pt;'>💡 راهنما: در صورت قطعی یا خطا، روی «ذخیره لاگ برای توسعه‌دهنده» کلیک کرده و فایل را به <b>09367056156</b> (ابراهیم جوهری) ارسال کنید.</span>")
             
         self.log_box.ensureCursorVisible()
 
@@ -519,6 +535,12 @@ class ModernEitaaGUI(QWidget):
         self.worker.stop_process()
         self.btn_stop.setEnabled(False)
 
+    def _open_report(self):
+        if os.path.exists(self.worker.excel_path):
+            os.startfile(os.path.abspath(self.worker.excel_path))
+        else:
+            QMessageBox.warning(self, "یافت نشد", "هنوز فایلی ایجاد نشده است.")
+
     def _on_done(self, status, count):
         self.btn_scan.setEnabled(True)
         self.btn_stop.setEnabled(False)
@@ -526,7 +548,7 @@ class ModernEitaaGUI(QWidget):
         if status == "success":
             self.pb.setValue(100)
             self.pb.setFormat(f"پایان: {count} فایل دریافت شد")
-            QMessageBox.information(self, "گزارش نهایی", f"عملیات با موفقیت انجام شد.\nتعداد {count} فایل ثبت گردید.")
+            QMessageBox.information(self, "گزارش", f"عملیات با موفقیت انجام شد.\nتعداد {count} فایل ثبت گردید.")
             if self.chk_auto_open.isChecked():
                 self._open_report()
         elif status == "empty":
