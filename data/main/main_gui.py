@@ -1,5 +1,5 @@
 # data/main/main_gui.py
-import sys, os, subprocess, threading, urllib.request, json
+import sys, os, subprocess, threading, urllib.request, json, time
 from datetime import datetime
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -125,7 +125,6 @@ class ModernEitaaGUI(QWidget):
     def _create_dashboard_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
-
         top_ctrl_layout = QHBoxLayout()
         top_ctrl_layout.addWidget(QLabel("مراحل اجرا:", styleSheet="font-size: 13pt; font-weight: bold; color: #89B4FA;"))
         top_ctrl_layout.addStretch()
@@ -136,7 +135,6 @@ class ModernEitaaGUI(QWidget):
         top_ctrl_layout.addWidget(btn_help)
         
         layout.addLayout(top_ctrl_layout)
-
         ctrl_group = QGroupBox()
         ctrl_layout = QHBoxLayout(ctrl_group)
 
@@ -191,7 +189,6 @@ class ModernEitaaGUI(QWidget):
     def _create_bot_settings_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
-
         group = QGroupBox("تنظیمات مرورگر و دانلود")
         grid = QGridLayout(group)
         grid.setSpacing(15)
@@ -253,7 +250,6 @@ class ModernEitaaGUI(QWidget):
     def _create_excel_settings_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
-
         path_group = QGroupBox("تنظیمات مسیر و فیلتر فایل")
         path_layout = QGridLayout(path_group)
         
@@ -325,7 +321,8 @@ class ModernEitaaGUI(QWidget):
         threading.Thread(target=self._execute_update_check, args=(False,), daemon=True).start()
 
     def _execute_update_check(self, silent):
-        url = "https://raw.githubusercontent.com/ClonerMc/Eitaa-PDF-Downloader-API-Less-/main/version.json"
+        nocache = str(int(time.time()))
+        url = f"https://raw.githubusercontent.com/ClonerMc/Eitaa-PDF-Downloader-API-Less-/main/version.json?nc={nocache}"
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             with urllib.request.urlopen(req, timeout=5) as response:
@@ -344,7 +341,7 @@ class ModernEitaaGUI(QWidget):
             self.lbl_update_status.setText("وضعیت: خطا در اتصال به سرور.")
             self.lbl_update_status.setStyleSheet("color: #F38BA8; font-weight: bold;")
             if not data.get("silent", False):
-                QMessageBox.warning(self, "خطای شبکه", "امکان اتصال به سرور گیت‌هاب فراهم نشد.\nلطفاً وضعیت شبکه یا VPN خود را بررسی کنید.")
+                QMessageBox.warning(self, "خطای شبکه", "امکان اتصال به سرور گیت‌هاب فراهم نشد.\nلطفاً وضعیت شبکه را بررسی کنید.")
             return
 
         online_version = data.get("version", "5.0")
@@ -403,30 +400,39 @@ class ModernEitaaGUI(QWidget):
         dlg.resize(680, 700)
         dlg.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         dlg.setStyleSheet(DARK_QSS)
+        
         ico_path = os.path.join(os.path.dirname(__file__), "..", "img", "Ico.png")
         if os.path.exists(ico_path):
             dlg.setWindowIcon(QIcon(ico_path))
+            
         layout = QVBoxLayout(dlg)
+        
         logo_layout = QHBoxLayout()
         logo_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
         img_dir = os.path.join(os.path.dirname(__file__), "..", "img")
         logo_path1 = os.path.join(img_dir, "logo.png")
         logo_path2 = os.path.join(img_dir, "logo-s.png")
+        
         logo1 = QLabel()
         if os.path.exists(logo_path1):
             px1 = QPixmap(logo_path1).scaledToWidth(110, Qt.TransformationMode.SmoothTransformation)
             logo1.setPixmap(px1)
             logo1.setFixedSize(px1.width(), px1.height())
         logo_layout.addWidget(logo1)
+        
         logo2 = QLabel()
         if os.path.exists(logo_path2):
             px2 = QPixmap(logo_path2).scaledToWidth(140, Qt.TransformationMode.SmoothTransformation)
             logo2.setPixmap(px2)
             logo2.setFixedSize(px2.width(), px2.height())
         logo_layout.addWidget(logo2)
+        
         layout.addLayout(logo_layout)
+
         text = QTextEdit()
         text.setReadOnly(True)
+        
         content = """
         <div style="font-family: 'B Zar', 'B Nazanin', Tahoma; font-size: 15pt; line-height: 1.8; color: #CDD6F4; background-color: #11111B; padding: 15px; border-radius: 8px;">
             <h2 style='color: #89B4FA; font-family: Tahoma; font-size: 14pt; margin-bottom: 5px;'>راهنمای استفاده و پشتیبانی</h2>
@@ -436,8 +442,10 @@ class ModernEitaaGUI(QWidget):
                 <li>وارد حساب ایتا شوید و به کانال مورد نظر بروید.</li>
                 <li>روی دکمه <b>«۲. شروع استخراج»</b> کلیک کنید تا عملیات آغاز شود.</li>
             </ol>
-            <p style='color: #F38BA8; font-size: 14pt;'><b>عیب‌یابی:</b> در صورت بروز ارور، روی دکمه <i>«ذخیره لاگ برای توسعه‌دهنده»</i> کلیک کرده و فایل متنی را در ایتا، روبیکا یا تلگرام به شماره <b>09367056156</b> ارسال نمایید.</p>
+            <p style='color: #F38BA8; font-size: 14pt;'><b>عیب‌یابی:</b> در صورت بروز ارور, روی دکمه <i>«ذخیره لاگ برای توسعه‌دهنده»</i> کلیک کرده و فایل متنی را در ایتا، روبیکا یا تلگرام به شماره <b>09367056156</b> ارسال نمایید.</p>
+            
             <hr style='border: 1px solid #313244; margin: 15px 0;'>
+            
             <h3 style='color: #F9E2AF; font-family: Tahoma; font-size: 13pt; margin-bottom: 5px;'>درباره نرم‌افزار</h3>
             <p style='font-size: 14pt;'>
                 <b>توسعه‌دهنده:</b> ابراهیم جوهری (دانشجوی مهندسی کامپیوتر نرم‌افزار)<br>
@@ -450,19 +458,16 @@ class ModernEitaaGUI(QWidget):
         """
         text.setHtml(content)
         layout.addWidget(text)
+
         btn_layout = QHBoxLayout()
-        btn_install = QPushButton("⚙️ نصب خودکار پیش‌نیازها")
-        btn_install.setStyleSheet("background-color: #A6E3A1; color: #11111B; font-weight: bold; padding: 10px; border-radius: 6px;")
-        btn_install.clicked.connect(self._install_prereqs)
-        btn_copy = QPushButton("📋 کپی دستورات در CMD")
-        btn_copy.setStyleSheet("background-color: #89DCEB; color: #11111B; font-weight: bold; padding: 10px; border-radius: 6px;")
-        btn_copy.clicked.connect(self._copy_prereqs)
         btn_close = QPushButton("بستن")
         btn_close.setStyleSheet("background-color: #313244; color: #CDD6F4; font-weight: bold; padding: 10px; border-radius: 6px;")
         btn_close.clicked.connect(dlg.accept)
-        btn_layout.addWidget(btn_install)
-        btn_layout.addWidget(btn_copy)
+
+        btn_layout.addStretch()
         btn_layout.addWidget(btn_close)
+        btn_layout.addStretch()
+        
         layout.addLayout(btn_layout)
         dlg.exec()
 
@@ -477,8 +482,10 @@ class ModernEitaaGUI(QWidget):
         colors = {"success": "#A6E3A1", "error": "#F38BA8", "warning": "#F9E2AF", "info": "#89DCEB"}
         color = colors.get(kind, "#CDD6F4")
         self.log_box.append(f"<span style='color:{color};'>{str_msg}</span>")
+        
         if kind == "error" and "عملیات" not in str_msg:
             self.log_box.append("<span style='color:#F9E2AF; font-size: 10pt;'>💡 راهنما: در صورت قطعی یا خطا، روی «ذخیره لاگ برای توسعه‌دهنده» کلیک کرده و فایل را به <b>09367056156</b> ارسال کنید.</span>")
+            
         self.log_box.ensureCursorVisible()
 
     def _on_progress(self, current, total):
@@ -492,6 +499,7 @@ class ModernEitaaGUI(QWidget):
             self.btn_browser.setText("✓ مرورگر با موفقیت اجرا شد")
             self.btn_browser.setEnabled(False)
             self.btn_scan.setEnabled(True)
+            self.log_box.append("<br><b style='color:#F9E2AF;'>راهنما: وارد کانال ایتا شوید و سپس روی «شروع استخراج» کلیک کنید.</b><br>")
         else:
             self.btn_browser.setEnabled(True)
             self.btn_browser.setText("تلاش مجدد برای اجرای مرورگر")
@@ -514,6 +522,7 @@ class ModernEitaaGUI(QWidget):
     def _on_done(self, status, count):
         self.btn_scan.setEnabled(True)
         self.btn_stop.setEnabled(False)
+        
         if status == "success":
             self.pb.setValue(100)
             self.pb.setFormat(f"پایان: {count} فایل دریافت شد")
@@ -524,7 +533,7 @@ class ModernEitaaGUI(QWidget):
             QMessageBox.warning(self, "بدون تغییر", "فایل جدیدی یافت نشد.")
         elif status == "stopped":
             self.pb.setFormat("🛑 توقف توسط کاربر")
-            QMessageBox.information(self, "لغو عملیات", "عملیات متوقف شد.")
+            QMessageBox.information(self, "لغو عملیات", "عملیات متوقف شد. فایل‌های قبلی ذخیره شده‌اند.")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
