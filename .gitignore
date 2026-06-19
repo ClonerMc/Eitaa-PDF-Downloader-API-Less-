@@ -1,0 +1,28 @@
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Project Outputs (Excel & Logs)
+Eitaa_PDFs/
+*.xlsx
+*.csv
+*.txt
+
+# Temporary build files
+src.cs
+error_log.txt
+error_debug.txt
+
+# OS spaces
+.txt
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
