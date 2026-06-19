@@ -57,7 +57,7 @@ class WelcomeDialog(QDialog):
             <hr style='border: 1px solid #313244; margin: 15px 0;'>
             <h3 style='color: #A6E3A1; margin-bottom: 5px; font-family: Tahoma; font-size: 13pt;'>شناسنامه پروژه آکادمیک:</h3>
             <p style='font-family: Tahoma; font-size: 12pt; line-height: 1.6; color: #A6ADC8;'>
-                <b>توسعه‌دهنده:</b> مهندس ابراهیم جوهری (دانشجوی مهندسی کامپیوتر نرم‌افزار)<br>
+                <b>توسعه‌دهنده:</b>  ابراهیم جوهری (دانشجوی مهندسی کامپیوتر نرم‌افزار)<br>
                 <b>دانشکده:</b> دانشکده آموزش عالی زرند - دانشگاه شهید باهنر کرمان<br>
                 <b>پروژه درس:</b> طراحی الگوریتم (استاد محترم: دکتر علی ناصر اسدی)<br>
                 <b>مدیرگروه محترم:</b> استاد دکتر علی رهنما<br>

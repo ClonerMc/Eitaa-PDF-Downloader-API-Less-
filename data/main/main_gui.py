@@ -130,7 +130,7 @@ class ModernEitaaGUI(QWidget):
         top_ctrl_layout.addWidget(QLabel("مراحل اجرا:", styleSheet="font-size: 13pt; font-weight: bold; color: #89B4FA;"))
         
         self.lbl_dashboard_update_notice = QLabel("")
-        self.lbl_dashboard_update_notice.setStyleSheet("font-size: 12pt; font-weight: bold; color: #11111B; background: #F38BA8; padding: 5px 15px; border-radius: 6px;")
+        self.lbl_dashboard_update_notice.setStyleSheet("font-size: 12pt; font-weight: bold; color: #11111B; background: #9bf38b; padding: 5px 15px; border-radius: 6px;")
         self.lbl_dashboard_update_notice.setVisible(False)
         top_ctrl_layout.addWidget(self.lbl_dashboard_update_notice)
 
@@ -368,7 +368,7 @@ class ModernEitaaGUI(QWidget):
             if not silent:
                 QMessageBox.information(
                     self, "به‌روزرسانی جدید", 
-                    f"مهندس عزیز، نسخه جدید نرم‌افزار ({online_version}) منتشر شد.\n\nتغییرات:\n{update_msg}\n\nجهت دریافت فایل‌های جدید به کانال گیت‌هاب مراجعه فرمایید."
+                    f" نسخه جدید نرم‌افزار ({online_version}) منتشر شد.\n\nتغییرات:\n{update_msg}\n\nجهت دریافت فایل‌های جدید به کانال گیت‌هاب مراجعه فرمایید."
                 )
         else:
             self.lbl_update_status.setText("وضعیت: آخرین نسخه روی سیستم شما نصب است.")
