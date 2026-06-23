@@ -38,7 +38,7 @@ echo } >> src.cs
 set COMPILER=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe
 if not exist "%COMPILER%" set COMPILER=%WINDIR%\Microsoft.NET\Framework\v3.5\csc.exe
 
-:: اضافه کردن خودکار پرچم win32icon در صورت وجود فایل آیکون
+:: اضافه کردن خودکار پرچم  win32icon در صورت وجود فایل آیکون
 if exist "data\img\Ico.ico" (
     "%COMPILER%" /nologo /target:winexe /win32icon:data\img\Ico.ico /out:Run_Eitaa.exe src.cs
 ) else (
