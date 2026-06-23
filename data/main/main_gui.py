@@ -1,4 +1,4 @@
-# data/main/main_gui.py
+#  data/main/main_gui.py
 import sys, os, subprocess, threading, urllib.request, json, time
 from datetime import datetime
 from PyQt6.QtWidgets import (
