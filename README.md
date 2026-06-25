@@ -1,4 +1,5 @@
 <h1 align="center">📥 Eitaa PDF Downloader (API-Less) - V6.2.0</h1>
+# دانلودر ایتا - Eitaa PDF Downloader (API-Less) - استخراج خودکار فایل از ایتا
 
 <p align="center">
   استخراج و دانلود خودکار فایل‌های PDF از کانال‌ها و گروه‌های پیام‌رسان ایتا بدون نیاز به API رسمی
