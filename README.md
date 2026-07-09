@@ -1,4 +1,4 @@
-<h1 align="center">📥 Eitaa PDF Downloader (API-Less) - V6.2.0</h1>
+<h1 align="center">📥 Eitaa PDF Downloader (API-Less) - V8.0.1</h1>
 # دانلودر ایتا - Eitaa PDF Downloader (API-Less) - استخراج خودکار فایل از ایتا
 
 <p align="center">
@@ -9,7 +9,7 @@
 “جایگزین ایتا یار برای دانلود فایل”
 ---
 
-## 🚀 آپدیت نسخه 6.2.0 (نسخه پایدار)
+## 🚀 آپدیت نسخه 8.0.1 (نسخه پایدار)
 در این بروزرسانی، هسته پردازشی و رابط کاربری برنامه کاملاً بازنویسی شده تا محدودیت‌های الگوریتم ایتا به طور کامل دور زده شود.
 
 ---
@@ -32,7 +32,7 @@
 ### روش دوم: اجرای سورس‌کد
 ```bash
 # 1. نصب پیش‌نیازها
-pip install PyQt6 playwright pandas openpyxl
+pip install PyQt6 playwright pandas openpyxl jdatetime
 
 # 2. نصب درایورهای مرورگر
 playwright install chromium
